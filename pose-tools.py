@@ -12,6 +12,20 @@ bl_info = {
 
 import bpy
 
+
+def getPose(arma):
+
+    poseList = []
+    print("Getting pose for "+arma.name)
+
+    return poseList
+
+def poseAddLimited(ob, frame):
+    # ob is the object/armature, should get the list of currently selected bones.
+    # frame is the pre-determined frame where 
+    print("getting there eventually")
+
+
 # generic function for mixing two poses
 def mixPoses(origin,new, value):
     # origin and new should both be lists containing all the channels of the 
@@ -38,6 +52,7 @@ class mixCurrentPose(bpy.types.Operator):
         print("INDEX: ",poselib.pose_markers.active_index)
 
         #get a COPY of the current pose
+        origin = getPose(ob)
 
         #apply the library selected pose
         bpy.ops.poselib.apply_pose(pose_index=poselib.pose_markers.active_index)
@@ -56,8 +71,9 @@ def pose_tools_panel(self, context):
     layout = self.layout
     split = layout.split()
     col = split.column()
+    # perhaps better to not have it here but only after the fact (post op)
     col.prop(context.scene, "posemixinfluence", slider=True, text="Mix Influence")
-    col.operator("poselib.mixcurrpose", text="Set new pose")
+    col.operator("poselib.mixcurrpose", text="Apply Mixed pose")
 
 # Registration
 def register():
