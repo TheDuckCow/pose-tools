@@ -13,13 +13,6 @@ bl_info = {
 import bpy
 
 
-def getPose(arma):
-
-    poseList = []
-    print("Getting pose for "+arma.name)
-
-    return poseList
-
 def poseAddLimited(ob, frame):
     # ob is the object/armature, should get the list of currently selected bones.
     # frame is the pre-determined frame where 
@@ -27,12 +20,31 @@ def poseAddLimited(ob, frame):
 
 
 # generic function for mixing two poses
-def mixPoses(origin,new, value):
+def mixToPose(ob, pose, value):
     # origin and new should both be lists containing all the channels of the 
     print("working on it")
 
     # if enabled, be sure that all new poses have keyframes inserted (may happen automatically)
     autoinset = bpy.context.scene.tool_settings.use_keyframe_insert_auto
+
+    for i in range(len(pose.bones)):
+        p = pose.bones[i]
+        #print("selected? "+str(p.bone.select))
+        #print("rot: ",p.location)
+        #p.location
+        #p.scale
+        #p.rotation_quaternion
+
+        for x in range(len(p.rotation_quaternion)):
+            #test for now, later should be an actual mix of each value
+            ob.pose.bones[i].rotation_quaternion[x] = p.rotation_quaternion[x]
+            print("ROT: old, new",ob.pose.bones[i].rotation_quaternion[x],p.rotation_quaternion[x])
+            # can't really tell if it's old or new data being operated on...
+            # yes, data on pose seems to be updated to the new pose, need a deep copy of original...
+        for x in range(len(p.location)):
+            ob.pose.bones[i].location[x] = p.location[x]
+
+
 
 
 
@@ -48,17 +60,21 @@ class mixCurrentPose(bpy.types.Operator):
         # check context for pose mode, armature being selected
 
         ob = context.object
-        poselib = ob.pose_library
+        poselib = ob.pose_library #probably not necessary
         print("INDEX: ",poselib.pose_markers.active_index)
 
         #get a COPY of the current pose
-        origin = getPose(ob)
+        #origin = getPose(ob)
+        prePose = ob.pose
 
         #apply the library selected pose
         bpy.ops.poselib.apply_pose(pose_index=poselib.pose_markers.active_index)
 
+        #necessary?
+        context.scene.update()
+
         # mix back in the poses based on the posemixinfluence property
-        #mixPoses(origin,new) #perhaps only needs to take in new pose and assume new pose applied
+        mixToPose(ob, prePose, 1-context.scene.posemixinfluence)
 
         self.report({'INFO'}, "Not fully implemented yet, working on it.")
 

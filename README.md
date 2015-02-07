@@ -16,3 +16,10 @@ This is a blender addon which hosts a few tools for improving and extending the 
 - Extract current pose on a per-bone basis
 - Actually mix poses, get bone positions and apply new ones.
 - Figure out how to show values in the post-operator panel
+
+
+# Miscallaneous links and references
+[Blender 2.49 pose library description](http://wiki.blender.org/index.php/Doc:2.4/Manual/Rigging/Posing/Pose_Library)
+[Blender 2.6+ pose library description, not as detailed](http://wiki.blender.org/index.php/Doc:2.6/Manual/Rigging/Posing/Pose_Library)
+[Reference pose manager tool in Maya](https://www.youtube.com/watch?v=e4MY8Ar0k7g)
+[Reference of pose commands in python](http://www.blender.org/api/blender_python_api_2_59_0/bpy.ops.pose.html)
