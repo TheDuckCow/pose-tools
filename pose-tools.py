@@ -4,9 +4,9 @@ bl_info = {
     "version": (1, 0),
     "blender": (2, 72, 0),
     "location": "Armature > Pose Library",
-    "description": "Adds a new Mesh Object",
+    "description": "Allows dynamic mixing between poses",
     "warning": "",
-    "wiki_url": "",
+    "wiki_url": "https://github.com/TheDuckCow/pose-tools",
     "category": "Animation"}
 
 
@@ -18,34 +18,38 @@ def poseAddLimited(ob, frame):
     # frame is the pre-determined frame where 
     print("getting there eventually")
 
+# brute force copies all location/rotation/scale of all bones and returns list
+def getPose(poseobj):
+    pose = []
+    b = poseobj.bones
+    for i in range(len(b)):
+        # generate weird UI box around curser point.... what?
+        pose.append([b[i].location.copy(), b[i].rotation_quaternion.copy(), b[i].scale.copy()])
+    return pose
+
 
 # generic function for mixing two poses
 def mixToPose(ob, pose, value):
-    # origin and new should both be lists containing all the channels of the 
-    print("working on it")
+
+    def linmix(orig, new, factor):
+        return orig*(1-factor)+new*factor
 
     # if enabled, be sure that all new poses have keyframes inserted (may happen automatically)
     autoinset = bpy.context.scene.tool_settings.use_keyframe_insert_auto
 
-    for i in range(len(pose.bones)):
-        p = pose.bones[i]
-        #print("selected? "+str(p.bone.select))
-        #print("rot: ",p.location)
-        #p.location
-        #p.scale
-        #p.rotation_quaternion
+    for i in range(len(pose)):
+        p = pose[i]
+        b = ob.pose.bones[i]
 
-        for x in range(len(p.rotation_quaternion)):
-            #test for now, later should be an actual mix of each value
-            ob.pose.bones[i].rotation_quaternion[x] = p.rotation_quaternion[x]
-            print("ROT: old, new",ob.pose.bones[i].rotation_quaternion[x],p.rotation_quaternion[x])
-            # can't really tell if it's old or new data being operated on...
-            # yes, data on pose seems to be updated to the new pose, need a deep copy of original...
-        for x in range(len(p.location)):
-            ob.pose.bones[i].location[x] = p.location[x]
+        # if not selected, don't set the pose!
+        if not ob.pose.bones[i].bone.select: continue
 
-
-
+        for x in range(len(p[0])): #position
+            b.location[x] =linmix(b.location[x], p[0][x], value)
+        for x in range(len(p[1])): #rotation_quaternion, not EULER
+            b.rotation_quaternion[x] = linmix(b.rotation_quaternion[x], p[1][x], value)
+        for x in range(len(p[2])): #scale
+            b.scale[x] = linmix(b.scale[x], p[2][x], value)
 
 
 class mixCurrentPose(bpy.types.Operator):
@@ -54,31 +58,34 @@ class mixCurrentPose(bpy.types.Operator):
     bl_label = "Mix current pose"
     bl_options = {'REGISTER', 'UNDO'}
 
+    influence = bpy.props.FloatProperty(  
+       name="Mix influence",  
+       default=100,  #bpy.context.scene.posemixinfluence*100
+       subtype='PERCENTAGE',  
+       unit='NONE',
+       min = 0,
+       max = 100,
+       description="influence") 
+
     def execute(self, context):
-        print("mixing poses!")
-
-        # check context for pose mode, armature being selected
-
-        ob = context.object
-        poselib = ob.pose_library #probably not necessary
-        print("INDEX: ",poselib.pose_markers.active_index)
 
         #get a COPY of the current pose
-        #origin = getPose(ob)
-        prePose = ob.pose
+        ob = context.object
+        prePose = getPose(ob.pose) # each element is a list of vectors, [loc, rot (quat.), scale]
 
         #apply the library selected pose
-        bpy.ops.poselib.apply_pose(pose_index=poselib.pose_markers.active_index)
-
-        #necessary?
-        context.scene.update()
+        bpy.ops.poselib.apply_pose(pose_index=ob.pose_library.pose_markers.active_index)
 
         # mix back in the poses based on the posemixinfluence property
-        mixToPose(ob, prePose, 1-context.scene.posemixinfluence)
-
-        self.report({'INFO'}, "Not fully implemented yet, working on it.")
+        #mixToPose(ob, prePose, 1-context.scene.posemixinfluence)
+        mixToPose(ob, prePose, 1-self.influence/100)
 
         return {'FINISHED'}
+
+     # @classmethod  
+     #    def poll(cls, context):  
+     #        ob = context.active_object  
+     #        return ob is not None and ob.mode == 'OBJECT' 
 
 
 # UI for new tools, should be appended to the existing panel
@@ -88,7 +95,8 @@ def pose_tools_panel(self, context):
     split = layout.split()
     col = split.column()
     # perhaps better to not have it here but only after the fact (post op)
-    col.prop(context.scene, "posemixinfluence", slider=True, text="Mix Influence")
+    #col.prop(context.scene, "posemixinfluence", slider=True, text="Mix Influence")
+    col.label(text="Check F6 / the post op menu for mix factor")
     col.operator("poselib.mixcurrpose", text="Apply Mixed pose")
 
 # Registration
