@@ -1,6 +1,8 @@
 # pose-tools
 This is a blender addon which hosts a few tools for improving and extending the use of the blender pose library for character animation.
 
+The source for this code is available at [https://github.com/TheDuckCow/pose-tools](https://github.com/TheDuckCow/pose-tools), developed by [Patrick W. Crawford](http://www.theduckcow.com)
+
 # Functions/operators
 - **Apply Mixed Pose**: *(Functional)* Apply a percentage mix between the current pose and the selected library pose. *View the mix slider in the F6/post-op menu.*
 - **Limited Add Pose**: *(planned)* Create a new pose based only on position of selected bones. The default behavior is a new pose will store a keyframe for all bone channels, selected/visible or not.
@@ -15,6 +17,7 @@ This is a blender addon which hosts a few tools for improving and extending the 
 # Todo list
 - Get poses to function with slider in library panel as well as post-op menu
 - Check that auto-keyframing works consistently with new mix poses & check on complex rigs
+- Make the pose tool faster, the brute-force copy of all bone transforms is slow on compelx rigs
 
 
 # Miscallaneous links and references
