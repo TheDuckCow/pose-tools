@@ -59,6 +59,19 @@ class mixCurrentPose(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     influence = bpy.props.FloatProperty(  
+        name="Mix influence",  
+        #default=bpy.context.scene.posemixinfluence*100,
+        default=100,
+        subtype='PERCENTAGE',  
+        unit='NONE',
+        min = 0,
+        max = 100,
+        description="influence")
+
+    """
+    # should also be able to have index selector like normal pose apply tool
+    # POSELIB_OT_apply_pose.pose_index
+    influence = bpy.props.FloatProperty(  
        name="Mix influence",  
        default=100,  #bpy.context.scene.posemixinfluence*100
        subtype='PERCENTAGE',  
@@ -66,6 +79,7 @@ class mixCurrentPose(bpy.types.Operator):
        min = 0,
        max = 100,
        description="influence") 
+    """
 
     def execute(self, context):
 
@@ -101,15 +115,15 @@ def pose_tools_panel(self, context):
 
 # Registration
 def register():
-    bpy.utils.register_class(mixCurrentPose)
-    bpy.types.DATA_PT_pose_library.append(pose_tools_panel)
-
     bpy.types.Scene.posemixinfluence = bpy.props.FloatProperty(
         name="Mix Influence",
         description="The mix factor between the original pose and the new pose",
+        subtype='PERCENTAGE',
         min=0,
-        max=1,
-        default=1)
+        max=100,
+        default=100)
+    bpy.utils.register_class(mixCurrentPose)
+    bpy.types.DATA_PT_pose_library.append(pose_tools_panel)
 
 def unregister():
     bpy.utils.unregister_class(mixCurrentPose)
