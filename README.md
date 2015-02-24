@@ -4,7 +4,7 @@ This is a blender addon which hosts a few tools for improving and extending the 
 The source for this code is available at [https://github.com/TheDuckCow/pose-tools](https://github.com/TheDuckCow/pose-tools), developed by [Patrick W. Crawford](http://www.theduckcow.com)
 
 # Functions/operators
-- **Apply Mixed Pose**: *(Functional)* Apply a percentage mix between the current pose and the selected library pose. *View the mix slider in the F6/post-op menu.*
+- **Apply Mixed Pose**: *(Functional, in dev)* Apply a percentage mix between the current pose and the selected library pose. *View the mix slider in the F6/post-op menu.*
 - **Limited Add Pose**: *(planned)* Create a new pose based only on position of selected bones. The default behavior is a new pose will store a keyframe for all bone channels, selected/visible or not.
 - **Sync-linked Pose Lib**: *(planned)* If a pose library is linked or appended, auto or manually resync it with updated poses if the external pose library changed.
 - **Visual Pose Library**: *(planned)* Functionally a tool that allows one to preview all poses at once via saved images of the active pose. Should also help generate these previews when creating new poses.
@@ -15,9 +15,9 @@ The source for this code is available at [https://github.com/TheDuckCow/pose-too
 - Improve the ease and clarify of use of the library pose tools
 
 # Todo list
-- Get poses to function with slider in library panel as well as post-op menu
-- Check that auto-keyframing works consistently with new mix poses & check on complex rigs
-- Make the pose tool faster, the brute-force copy of all bone transforms is slow on compelx rigs
+- Make the pose tool faster, check for other optimizations
+- Make it work properly from object mode, too (like the original tool), add in read-last menu pose index too
+- Better error handling when attempting to add pose when no library created (ie gray it out!)
 
 
 # Miscallaneous links and references
