@@ -55,23 +55,7 @@ def mixToPose(ob, pose, value):
 
         # INSERT KEYFRAMES FOR ALL CHANNELS!
         if autoinset:
-            print("insert keyframes!")
             bpy.ops.anim.keyframe_insert_menu(type='BUILTIN_KSI_VisualLocRotScale')
-
-
-    # for i in range(len(pose)):
-    #     p = pose[i]
-    #     b = ob.pose.bones[i]
-
-    #     # if not selected, don't set the pose!
-    #     if not ob.pose.bones[i].bone.select: continue
-
-    #     for x in range(len(p[0])): #position
-    #         b.location[x] =linmix(b.location[x], p[0][x], value)
-    #     for x in range(len(p[1])): #rotation_quaternion, not EULER
-    #         b.rotation_quaternion[x] = linmix(b.rotation_quaternion[x], p[1][x], value)
-    #     for x in range(len(p[2])): #scale
-    #         b.scale[x] = linmix(b.scale[x], p[2][x], value)
 
 
 class mixCurrentPosePOST(bpy.types.Operator):
@@ -139,9 +123,6 @@ class mixCurrentPosePRE(bpy.types.Operator):
 def pose_tools_panel(self, context):
 
     layout = self.layout
-    # split = layout.split()
-    # col = split.column()
-    # perhaps better to not have it here but only after the fact (post op)
     layout.label(text="Use redo-last menu")
     layout.prop(context.scene,"redolastbool")
     if bpy.context.scene.redolastbool:
