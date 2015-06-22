@@ -88,10 +88,6 @@ class mixCurrentPose(bpy.types.Operator):
         min = 0,
         description="pose index"
         )
-    
-    #would use this property to match built-in function for redo-last ability to change pose index
-    
-
     # make a property here for which pose, like the input one?
     # or even make it a dropdown? and have the numbers become the poseindex below for builtin
 
@@ -101,9 +97,8 @@ class mixCurrentPose(bpy.types.Operator):
         ob = context.object
         prePose = getPose(ob.pose) # each element is a list of vectors, [loc, rot (quat.), scale]
         #apply the library selected pose
-        # context.object.pose_library.pose_markers.active_index
-        #bpy.ops.poselib.apply_pose(pose_index=self.pose_index)
-        bpy.ops.poselib.apply_pose(pose_index=context.object.pose_library.pose_markers.active_index)
+        bpy.ops.poselib.apply_pose(pose_index=self.pose_index)
+        #bpy.ops.poselib.apply_pose(pose_index=context.object.pose_library.pose_markers.active_index)
 
         # mix back in the poses based on the posemixinfluence property
         mixToPose(ob, prePose, 1-self.influence/100)
@@ -154,10 +149,9 @@ class mixedPosePaste(bpy.types.Operator):
 def pose_tools_panel(self, context):
     layout = self.layout
     col = layout.split(align=True)
-    col.operator("poselib.mixcurrpose",text="Apply mixed pose").influence = context.scene.posemixinfluence
-    #p = col.operator("poselib.mixcurrposepost",text="Apply mixed pose").pose_index = context.object.pose_library.pose_markers.active_index
-    #p.influence = context.scene.posemixinfluence
-    #p.pose_index = context.object.pose_library.pose_markers.active_index
+    p = col.operator("poselib.mixcurrpose",text="Apply mixed pose")
+    p.influence = context.scene.posemixinfluence
+    p.pose_index = context.object.pose_library.pose_markers.active_index
     col.prop(context.scene, "posemixinfluence", slider=True, text="Mix Influence")
 
 
@@ -201,10 +195,9 @@ class poselibToolshelf(bpy.types.Panel):
         col2 = layout.column(align=True)
         if poselib:
             if pose_marker_active is not None:
-                col2.operator("poselib.mixcurrpose",text="Apply mixed pose").influence = context.scene.posemixinfluence
-                #p = col2.operator("poselib.mixcurrpose",text="Apply Library Pose").pose_index = context.object.pose_library.pose_markers.active_index
-                #p.influence = context.scene.posemixinfluence
-                #p.pose_index = poselib.pose_markers.active_index
+                p = col2.operator("poselib.mixcurrpose",text="Apply mixed pose")
+                p.influence = context.scene.posemixinfluence
+                p.pose_index = context.object.pose_library.pose_markers.active_index
         row = col2.row(align=True)
         row.operator("pose.copy", text="Copy Pose")
         row.operator("poselib.mixedposepaste",
