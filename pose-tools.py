@@ -1,10 +1,10 @@
 bl_info = {
     "name": "PoseTools",
     "author": "Patrick W. Crawford <support@theduckcow.com>",
-    "version": (1, 1),
-    "blender": (2, 72, 0),
+    "version": (1, 2),
+    "blender": (2, 75, 0),
     "location": "Armature > Pose Library",
-    "description": "Allows dynamic mixing between poses",
+    "description": "Allows dynamic mixing between poses in library and clipboard",
     "warning": "",
     "wiki_url": "https://github.com/TheDuckCow/pose-tools",
     "category": "Animation"}
@@ -12,19 +12,33 @@ bl_info = {
 
 import bpy
 
+v = False # v for verbose
 def poseAddLimited(ob, frame):
     # ob is the object/armature, should get the list of currently selected bones.
     # frame is the pre-determined frame where 
     print("getting there eventually")
-
-    print("q1")
 
 # brute force copies all location/rotation/scale of all bones and returns list
 def getPose(poseCurr):
     pose = []
     b = bpy.context.selected_pose_bones
     for a in b:
-        pose.append([a.location.copy(), a.rotation_quaternion.copy(), a.scale.copy()])
+        
+        rotway = a.rotation_mode
+        rotname = ''
+        if rotway in ['QUATERNION']:
+            rotname = "rotation_quaternion" # for now, fix later
+        elif rotway in ['XYZ','XZY','YXZ','YZX','ZYX','ZXY']:
+            rotname = "rotation_euler"
+        elif rotway in ['AXIS_ANGLE']:
+            rotname = 'rotation_axis_angle'
+        else:
+            rotway = "rotation_quaternion" # for now, fix later
+        # rotation modes: rotation_axis_angle, rotation_euler, rotation_quaternion
+        if rotname == 'rotation_axis_angle': # it's a list type, so can't/no need to .copy()
+            pose.append([a.location.copy(), a.rotation_axis_angle, a.scale.copy(), rotname])
+        else:   
+            pose.append([a.location.copy(), getattr(a,rotname).copy(), a.scale.copy(), rotname])
     return pose
 
 # generic function for mixing two poses
@@ -35,8 +49,6 @@ def mixToPose(ob, pose, value):
 
     autoinsert = bpy.context.scene.tool_settings.use_keyframe_insert_auto
     bones_select = bpy.context.selected_pose_bones
-    #import time
-    #t0 = time.time()
     for b,p in zip(bones_select,pose):
         
         # moved from for loops to hard coded in attempt to increase speed,
@@ -46,22 +58,33 @@ def mixToPose(ob, pose, value):
         b.location[0] =linmix(b.location[0], p[0][0], value)
         b.location[1] =linmix(b.location[1], p[0][1], value)
         b.location[2] =linmix(b.location[2], p[0][2], value)
-        #for x in range(len(p[2])): #rotation_quaternion, not EULER
-        #    b.rotation_quaternion[x] = linmix(b.rotation_quaternion[x], p[2][x], value)
-        b.rotation_quaternion[0] = linmix(b.rotation_quaternion[0], p[1][0], value)
-        b.rotation_quaternion[1] = linmix(b.rotation_quaternion[1], p[1][1], value)
-        b.rotation_quaternion[2] = linmix(b.rotation_quaternion[2], p[1][2], value)
-        b.rotation_quaternion[3] = linmix(b.rotation_quaternion[3], p[1][3], value)
-        #for x in range(len(p[3])): #scale
-        #    b.scale[x] = linmix(b.scale[x], p[3][x], value)
         b.scale[0] = linmix(b.scale[0], p[2][0], value)
         b.scale[1] = linmix(b.scale[1], p[2][1], value)
         b.scale[2] = linmix(b.scale[2], p[2][2], value)
-    #t1 = time.time()
-    #print("timing: {x}s".format(x=t1-t0))
+
+        if p[3] == "rotation_quaternion" or p[3] == '':
+            b.rotation_quaternion[0] = linmix(b.rotation_quaternion[0], p[1][0], value)
+            b.rotation_quaternion[1] = linmix(b.rotation_quaternion[1], p[1][1], value)
+            b.rotation_quaternion[2] = linmix(b.rotation_quaternion[2], p[1][2], value)
+            b.rotation_quaternion[3] = linmix(b.rotation_quaternion[3], p[1][3], value)
+        elif p[3] == "rotation_euler":
+            b.rotation_euler[0] = linmix(b.rotation_euler[0], p[1][0], value)
+            b.rotation_euler[1] = linmix(b.rotation_euler[1], p[1][1], value)
+            b.rotation_euler[2] = linmix(b.rotation_euler[2], p[1][2], value)
+        elif p[3] == "rotation_axis_angle":
+            b.rotation_axis_angle[0] = linmix(b.rotation_axis_angle[0], p[1][0], value)
+            b.rotation_axis_angle[1] = linmix(b.rotation_axis_angle[1], p[1][1], value)
+            b.rotation_axis_angle[2] = linmix(b.rotation_axis_angle[2], p[1][2], value)
+            b.rotation_axis_angle[3] = linmix(b.rotation_axis_angle[3], p[1][3], value)
+        else:
+            print("ERROR!")
+
+        #for x in range(len(p[2])): #rotation_quaternion, not EULER
+        #    b.rotation_quaternion[x] = linmix(b.rotation_quaternion[x], p[2][x], value)
+        
+        
     if autoinsert:
         bpy.ops.anim.keyframe_insert_menu(type='BUILTIN_KSI_VisualLocRotScale')
-
 
 
 #######
@@ -70,6 +93,7 @@ class mixCurrentPose(bpy.types.Operator):
     """Mix-apply the selected library pose on to the current pose"""
     bl_idname = "poselib.mixcurrpose"
     bl_label = "Mix current pose"
+
     bl_options = {'REGISTER', 'UNDO'}
 
 
@@ -95,13 +119,10 @@ class mixCurrentPose(bpy.types.Operator):
 
         #get a COPY of the current pose
         ob = context.object
-        prePose = getPose(ob.pose) # each element is a list of vectors, [loc, rot (quat.), scale]
-        #apply the library selected pose
+        prePose = getPose(ob.pose) # each element is a list of vectors, [loc, rot (quat.), scale, rottype]
         bpy.ops.poselib.apply_pose(pose_index=self.pose_index)
         #bpy.ops.poselib.apply_pose(pose_index=context.object.pose_library.pose_markers.active_index)
-
-        # mix back in the poses based on the posemixinfluence property
-        mixToPose(ob, prePose, 1-self.influence/100)
+        mixToPose(ob, prePose, 1-self.influence/100) # mix back in the poses back
 
         return {'FINISHED'}
     
@@ -109,7 +130,6 @@ class mixCurrentPose(bpy.types.Operator):
     def poll(cls, context):
         return (context.object and context.object.type == 'ARMATURE' and context.object.mode == 'POSE' )
    # in the above, remove the last one once I get it working in object mode too (apply to all bones..)
-
 
 
 #######
@@ -131,21 +151,19 @@ class mixedPosePaste(bpy.types.Operator):
         )
 
     def execute(self, context):
-
-        #get a COPY of the current pose
         ob = context.object
-        prePose = getPose(ob.pose)
-        #apply the buffer selected pose
+        prePose = getPose(ob.pose) #get a COPY of the current pose
         bpy.ops.pose.paste()
-        # mix back in the poses based on the posemixinfluence property
-        mixToPose(ob, prePose, 1-self.influence/100)
-
+        mixToPose(ob, prePose, 1-self.influence/100) # mix back in the previous pose
         return {'FINISHED'}
 
+    @classmethod
+    def poll(cls, context):
+        return (context.object and context.object.type == 'ARMATURE' and context.object.mode == 'POSE' )
 
 
 #######
-# UI for new tools next to the built in pose-lib tools, under the aramture tab of properties window
+# UI for new tools next to the built in pose-lib tools, under the pose library of armature properties tab
 def pose_tools_panel(self, context):
     layout = self.layout
     col = layout.split(align=True)
@@ -155,15 +173,14 @@ def pose_tools_panel(self, context):
     col.prop(context.scene, "posemixinfluence", slider=True, text="Mix Influence")
 
 
-
 #######
 # Panel for placing in the shift-A add object menu
 class poselibToolshelf(bpy.types.Panel):
-    """Extra Pose Tools"""
+    """Theory Animation Panel"""
     bl_label = "Pose Library Tools"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
-    bl_context = "posemode"
+    # bl_context = "posemode"
     bl_category = 'Tools'
 
     def draw(self, context):
@@ -173,7 +190,12 @@ class poselibToolshelf(bpy.types.Panel):
         row.label(text="Pose Library")
 
         ob = context.object
-        poselib = ob.pose_library
+        try:
+            poselib = ob.pose_library
+        except:
+            row = layout.row()
+            row.label("Select an armature for poses")
+            return 
 
         layout.template_ID(ob, "pose_library", new="poselib.new", unlink="poselib.unlink")
 
@@ -184,8 +206,8 @@ class poselibToolshelf(bpy.types.Panel):
                               poselib.pose_markers, "active_index", rows=3)
             col = row.column(align=True)
             col.active = (poselib.library is None)
-            col.operator("poselib.pose_add", icon='ZOOMIN', text="")
-            col.operator_context = 'EXEC_DEFAULT'  # exec not invoke, so that menu doesn't need showing
+            col.operator("poselib.pose_add", icon='ZOOMIN', text="") # frame = int, to bpypass menu add frame of the last un-used datablock!
+            col.operator_context = 'EXEC_DEFAULT'  # exec not invoke, so menu doesn't need showing
             pose_marker_active = poselib.pose_markers.active
 
             col2 = layout.column(align=True)
@@ -203,7 +225,6 @@ class poselibToolshelf(bpy.types.Panel):
         row.operator("poselib.mixedposepaste",
                     text="Mixed Paste").influence = context.scene.posemixinfluence
         col2.prop(context.scene, "posemixinfluence", slider=True, text="Mix Influence")
-
 
 
 # Registration
