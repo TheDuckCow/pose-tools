@@ -3,6 +3,8 @@ This is a blender addon which hosts a few tools for improving and extending the 
 
 The source for this code is available at [https://github.com/TheDuckCow/pose-tools](https://github.com/TheDuckCow/pose-tools), developed by [Patrick W. Crawford](http://www.theduckcow.com)
 
+[See this demo video](https://www.youtube.com/watch?v=oT7-IlVgIw0) of the addon for example uses.
+
 # Functions/operators
 - **Apply Mixed Pose**: Apply a percentage mix between the current pose and the selected library pose.
 - **Mixed Paste Pose**: Apply a percentage mix between the current pose and the previously copied pose
