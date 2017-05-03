@@ -1,7 +1,7 @@
 # pose-tools
 This is a blender addon which hosts a few tools for improving and extending the use of the blender pose library for character animation.
 
-The source for this code is available at [https://github.com/TheDuckCow/pose-tools](https://github.com/TheDuckCow/pose-tools), developed by [Patrick W. Crawford](http://www.theduckcow.com)
+The source for this code is available at [https://github.com/TheDuckCow/pose-tools](https://github.com/TheDuckCow/pose-tools), developed by [Patrick W. Crawford](http://www.theduckcow.com). **To install, [download the pose-tools.py addon](https://raw.githubusercontent.com/TheDuckCow/pose-tools/master/pose-tools.py) and install directly into blender (as a .py file, not a zip).**
 
 [See this demo video](https://www.youtube.com/watch?v=oT7-IlVgIw0) of the addon for example uses.
 
