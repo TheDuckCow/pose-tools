@@ -2,7 +2,7 @@ bl_info = {
     "name": "PoseTools",
     "author": "Patrick W. Crawford <support@theduckcow.com>",
     "version": (1, 2),
-    "blender": (2, 75, 0),
+    "blender": (2, 80, 0),
     "location": "Armature > Pose Library",
     "description": "Allows dynamic mixing between poses in library and clipboard",
     "warning": "",
@@ -177,9 +177,15 @@ def pose_tools_panel(self, context):
 # Panel for placing in the shift-A add object menu
 class poselibToolshelf(bpy.types.Panel):
     """Theory Animation Panel"""
+    
+    if bpy.app.version < (2,80,0): 
+        Region = "TOOLS"
+    else:
+        Region = "UI"
+        
     bl_label = "Pose Library Tools"
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = Region
     # bl_context = "posemode"
     bl_category = 'Tools'
 
